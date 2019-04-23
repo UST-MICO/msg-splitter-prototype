@@ -54,7 +54,7 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public MessageListener receiver() {
-        return new MessageListener();
+    public SplitterMessageListener receiver() {
+        return new SplitterMessageListener();
     }
 }
