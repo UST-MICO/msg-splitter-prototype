@@ -58,6 +58,7 @@ public class SplitterMessageListener {
                                 .source(cloudEvent.getSource())
                                 .data(jsonPart)
                                 .time(cloudEvent.getTime().get())
+                                .contentType(cloudEvent.getContentType().get())
                                 .build();
                         log.info("Build CloudEvent:" + cloudEventPart.toString());
                         kafkaTemplate.send(outputTopic, cloudEventPart);
