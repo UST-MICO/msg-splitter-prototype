@@ -1,7 +1,10 @@
 package io.github.ustmico.m3msgsplitter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudevents.CloudEvent;
+import io.cloudevents.CloudEventBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,13 +12,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import javax.annotation.PostConstruct;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
-import java.io.StringReader;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class SplitterMessageListener {
@@ -36,7 +33,7 @@ public class SplitterMessageListener {
     }
 
     @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private KafkaTemplate<String, CloudEvent<JsonNode>> kafkaTemplate;
 
     @Value(value = "${kafka.outputTopic}")
     private String outputTopic;
@@ -49,18 +46,27 @@ public class SplitterMessageListener {
         log.info("received payload='{}'", cloudEvent);
         if (cloudEvent.getData().isPresent()) {
             JsonNode payload = cloudEvent.getData().get();
-            log.info("Payload:"+payload);
+            log.info("Payload:" + payload);
             log.info(cloudEvent.getData().get().getClass().toString());
-           if (simpleMode) {
-               if(payload.isArray()){
-                   for (final JsonNode jsonPart : payload) {
-                       log.debug("Send message:" + jsonPart.toString());
-                       kafkaTemplate.send(outputTopic, jsonPart.toString());
-                   }
-               }else{
-                   log.error("Could not split the message:"+payload.toString());
-                   //TODO implement invalid message topic
-               }
+            if (simpleMode) {
+                if (payload.isArray()) {
+                    for (final JsonNode jsonPart : payload) {
+                        log.info("Send message:" + jsonPart.toString());
+                        final CloudEvent<JsonNode> cloudEventPart = new CloudEventBuilder<JsonNode>()
+                                .type(cloudEvent.getType())
+                                .id(cloudEvent.getId())
+                                .source(cloudEvent.getSource())
+                                .data(jsonPart)
+                                .time(cloudEvent.getTime().get())
+                                .build();
+                        log.info("Build CloudEvent:" + cloudEventPart.toString());
+                        kafkaTemplate.send(outputTopic, cloudEventPart);
+
+                    }
+                } else {
+                    log.error("Could not split the message:" + payload.toString());
+                    //TODO implement invalid message topic
+                }
             }
         }
     }

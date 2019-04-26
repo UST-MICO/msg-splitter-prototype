@@ -1,5 +1,7 @@
 package io.github.ustmico.m3msgsplitter;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import io.cloudevents.CloudEvent;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +22,7 @@ public class KafkaProducerConfig {
     private String bootstrapAddress;
 
     @Bean
-    public ProducerFactory<String, String> producerFactory() {
+    public ProducerFactory<String, CloudEvent<JsonNode>> producerFactory() {
         Map<String, Object> configProps = putConfig();
         return new DefaultKafkaProducerFactory<>(configProps);
     }
@@ -41,12 +43,12 @@ public class KafkaProducerConfig {
                 StringSerializer.class);
         configProps.put(
                 ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                StringSerializer.class);
+                CloudEventSerializer.class);
         return configProps;
     }
 
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate() {
+    public KafkaTemplate<String, CloudEvent<JsonNode>> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
