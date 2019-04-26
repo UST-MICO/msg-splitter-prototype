@@ -1,5 +1,7 @@
 package io.github.ustmico.m3msgsplitter;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.json.Json;
 import lombok.extern.slf4j.Slf4j;
@@ -10,21 +12,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Slf4j
-public class CloudEventDeserializer implements Deserializer<CloudEvent> {
+public class CloudEventDeserializer implements Deserializer<CloudEvent<JsonNode>> {
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
 
     }
 
     @Override
-    public CloudEvent<Object> deserialize(String topic, byte[] data) {
+    public CloudEvent<JsonNode> deserialize(String topic, byte[] data) {
         if (data == null) {
             return null;
         }
         try {
             String message = new String(data, StandardCharsets.UTF_8);
             log.info("Trying to parse the message:" + message);
-            return Json.decodeCloudEvent(message);
+            return Json.decodeValue(message, new TypeReference<CloudEvent<JsonNode>>() {});
         } catch (IllegalStateException e) {
             throw new SerializationException("Could not create an CloudEvent message", e);
         }

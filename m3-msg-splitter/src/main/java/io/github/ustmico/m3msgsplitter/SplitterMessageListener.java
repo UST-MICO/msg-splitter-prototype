@@ -45,27 +45,23 @@ public class SplitterMessageListener {
     private boolean simpleMode;
 
     @KafkaListener(topics = "${kafka.inputTopic}")
-    public void receive(CloudEvent<Object> cloudEvent) {
+    public void receive(CloudEvent<JsonNode> cloudEvent) {
         log.info("received payload='{}'", cloudEvent);
         if (cloudEvent.getData().isPresent()) {
-            String payload = cloudEvent.getData().get().toString();
+            JsonNode payload = cloudEvent.getData().get();
             log.info("Payload:"+payload);
-            //TODO Add splitter functionality for the cloud event data element
-            /*List<String> splitPayload = new LinkedList<>();
             log.info(cloudEvent.getData().get().getClass().toString());
            if (simpleMode) {
-                try (JsonReader jsonReader = Json.createReader(new StringReader(payload))) {
-                    JsonArray jsonPayloadArray = jsonReader.readArray();
-                    log.info("Json array size:" + jsonPayloadArray.size());
-                    for (JsonValue jsonSplit : jsonPayloadArray) {
-                        splitPayload.add(jsonSplit.toString());
-                    }
-                }
+               if(payload.isArray()){
+                   for (final JsonNode jsonPart : payload) {
+                       log.debug("Send message:" + jsonPart.toString());
+                       kafkaTemplate.send(outputTopic, jsonPart.toString());
+                   }
+               }else{
+                   log.error("Could not split the message:"+payload.toString());
+                   //TODO implement invalid message topic
+               }
             }
-            for (String messagePayload : splitPayload) {
-                log.debug("Send message:" + messagePayload);
-                kafkaTemplate.send(outputTopic, messagePayload);
-            }*/
         }
     }
 }
