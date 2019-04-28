@@ -57,7 +57,7 @@ public class SplitterMessageListener {
             JsonNode payload = cloudEvent.getData().get();
             log.info("Payload:" + payload);
             log.info(cloudEvent.getData().get().getClass().toString());
-            if (false) {
+            if (simpleMode) {
                 if (payload.isArray()) {
                     for (final JsonNode jsonPart : payload) {
                         sendMessagePart(cloudEvent, jsonPart);
