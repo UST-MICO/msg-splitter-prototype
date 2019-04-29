@@ -1,4 +1,4 @@
-package io.github.ustmico.m3msgsplitter;
+package io.github.ustmico.m3msgsplitter.kafka;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.cloudevents.CloudEvent;

@@ -17,24 +17,11 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 public class SplitterMessageListener {
 
-    public SplitterMessageListener() {
-        log.info("SplitterMessageListener");
-        log.info("outputTopic" + outputTopic);
-    }
-
-    @Value(value = "${kafka.bootstrapServers}")
-    private String adresse;
-
-    @PostConstruct
-    public void printTopic() {
-        log.info("SplitterMessageListener");
-        log.info("outputTopic" + outputTopic);
-        log.info("adresse " + adresse);
-    }
 
     @Autowired
     private KafkaTemplate<String, CloudEvent<JsonNode>> kafkaTemplate;
@@ -57,6 +44,7 @@ public class SplitterMessageListener {
             JsonNode payload = cloudEvent.getData().get();
             log.info("Payload:" + payload);
             log.info(cloudEvent.getData().get().getClass().toString());
+            String messageSplitId = UUID.randomUUID().toString();
             if (simpleMode) {
                 if (payload.isArray()) {
                     for (final JsonNode jsonPart : payload) {
@@ -96,6 +84,7 @@ public class SplitterMessageListener {
                 .data(jsonPart)
                 .time(cloudEvent.getTime().get())
                 .contentType(cloudEvent.getContentType().get())
+                //.extension()
                 .build();
         log.info("Build CloudEvent:" + cloudEventPart.toString());
         kafkaTemplate.send(outputTopic, cloudEventPart);

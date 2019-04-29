@@ -1,7 +1,8 @@
-package io.github.ustmico.m3msgsplitter;
+package io.github.ustmico.m3msgsplitter.kafka;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.cloudevents.CloudEvent;
+import io.github.ustmico.m3msgsplitter.kafka.CloudEventSerializer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

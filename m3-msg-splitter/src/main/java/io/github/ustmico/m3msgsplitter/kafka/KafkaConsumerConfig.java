@@ -1,6 +1,8 @@
-package io.github.ustmico.m3msgsplitter;
+package io.github.ustmico.m3msgsplitter.kafka;
 
 import io.cloudevents.CloudEvent;
+import io.github.ustmico.m3msgsplitter.SplitterMessageListener;
+import io.github.ustmico.m3msgsplitter.kafka.CloudEventDeserializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -15,9 +17,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
-import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.SeekToCurrentErrorHandler;
-import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer2;
 
 import java.util.HashMap;
