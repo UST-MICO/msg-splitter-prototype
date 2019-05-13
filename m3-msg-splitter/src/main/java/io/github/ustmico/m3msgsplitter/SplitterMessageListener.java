@@ -13,6 +13,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import org.springframework.web.client.RestTemplate;
+
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.List;
@@ -29,8 +31,11 @@ public class SplitterMessageListener {
     @Value(value = "${kafka.outputTopic}")
     private String outputTopic;
 
-    @Value(value = "${kafka.simpleMode}")
-    private boolean simpleMode;
+    @Value(value = "${splitter.splittingMode}")
+    private SplittingMode splittingMode;
+
+    @Value(value = "${splitter.openFaaSFunction}")
+    private String openFaaSFunction;
 
     @Value(value = "${splitter.groovyScript}")
     private String groovyScript;
@@ -45,16 +50,9 @@ public class SplitterMessageListener {
             log.info("Payload:" + payload);
             log.info(cloudEvent.getData().get().getClass().toString());
             String messageSplitId = UUID.randomUUID().toString();
-            if (simpleMode) {
-                if (payload.isArray()) {
-                    for (final JsonNode jsonPart : payload) {
-                        sendMessagePart(cloudEvent, jsonPart);
-                    }
-                } else {
-                    log.error("Could not split the message:" + payload.toString());
-                    //TODO implement invalid message topic
-                }
-            }else{
+            if (SplittingMode.SIMPLE.equals(splittingMode)) {
+                sendJsonArray(cloudEvent, payload);
+            }else if(SplittingMode.ADVANCED.equals(splittingMode)){
                 try {
                     Binding binding = new Binding();
                     binding.setVariable("cloudEvent", cloudEvent);
@@ -71,7 +69,32 @@ public class SplitterMessageListener {
                 } catch (IOException e) {
                     log.error("Could not get valid json groovy script",e);
                 }
+            }else if(SplittingMode.OPEN_FAAS.equals(splittingMode)){
+                RestTemplate restTemplate = new RestTemplate();
+                try {
+                    //The function sends a json array as response
+                    //TODO implement error handling
+                   String response = restTemplate.postForObject(openFaaSFunction,objectMapper.writeValueAsString(payload),String.class);
+                   log.info("OpenFaaS function response: {}",response);
+                   JsonNode jsonArray = objectMapper.readTree(response);
+                   sendJsonArray(cloudEvent,jsonArray);
+                } catch (JsonProcessingException e) {
+                    log.error("Could not get valid json from payload",e);
+                } catch (IOException e) {
+                    log.error("Could not get valid json groovy script",e);
+                }
             }
+        }
+    }
+
+    private void sendJsonArray(CloudEvent<JsonNode> cloudEvent, JsonNode payload) {
+        if (payload.isArray()) {
+            for (final JsonNode jsonPart : payload) {
+                sendMessagePart(cloudEvent, jsonPart);
+            }
+        } else {
+            log.error("Could not split the message:" + payload.toString());
+            //TODO implement invalid message topic
         }
     }
 
