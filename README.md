@@ -140,3 +140,10 @@ The resulting messages look like this:
   "specVersion": "0.2"
 }
 ```
+
+### FaaS Mode (Experimental)
+
+It is possible to implement the splitting logic as a FaaS function. 
+For more information read [this](https://github.com/UST-MICO/mico/issues/712) issue.
+The function can be configured via the `splitter.openFaaSFunction` property.
+The splitter will invoke the function with the [data](https://github.com/cloudevents/spec/blob/v0.2/json-format.md) attribute as a body and expects a JSON array as a return. An example is provided as an [OpenFaaS](https://github.com/openfaas/faas) function in the `OpenFaaSFunctions` folder.
